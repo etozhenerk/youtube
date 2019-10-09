@@ -251,5 +251,6 @@ document.addEventListener("DOMContentLoaded", () => {
   //youtube
   {
     const API_KEY = "AIzaSyD6diIi_ZyVLwvgSj8SpScN4UQGYKJvons";
+    const API_AUTH = "338972520459-rkpje76cvha9gkoorujbctqar7peofdg.apps.googleusercontent.com";
   }
 });
