@@ -12,108 +12,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const changeLang = (btn, lang) => {
-      const langRu = [
-        "ё",
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        0,
-        "-",
-        "=",
-        "⬅",
-        "й",
-        "ц",
-        "у",
-        "к",
-        "е",
-        "н",
-        "г",
-        "ш",
-        "щ",
-        "з",
-        "х",
-        "ъ",
-        "ф",
-        "ы",
-        "в",
-        "а",
-        "п",
-        "р",
-        "о",
-        "л",
-        "д",
-        "ж",
-        "э",
-        "я",
-        "ч",
-        "с",
-        "м",
-        "и",
-        "т",
-        "ь",
-        "б",
-        "ю",
-        ".",
-        "en",
-        " "
-      ];
-      const langEn = [
-        "`",
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        0,
-        "-",
-        "=",
-        "⬅",
-        "q",
-        "w",
-        "e",
-        "r",
-        "t",
-        "y",
-        "u",
-        "i",
-        "o",
-        "p",
-        "[",
-        "]",
-        "a",
-        "s",
-        "d",
-        "f",
-        "g",
-        "h",
-        "j",
-        "k",
-        "l",
-        ";",
-        '"',
-        "z",
-        "x",
-        "c",
-        "v",
-        "b",
-        "n",
-        "m",
-        ",",
-        ".",
-        "/",
-        "ru",
-        " "
-      ];
+      const langRu = ['ё', 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, '-', '=', '⬅',
+                'й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ',
+                'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э',
+                'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', '.',
+                'en', ' '
+               ];
+      const langEn = ['`', 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, '-', '=', '⬅',
+                'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']',
+                'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '"',
+                'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/',
+                'ru', ' '
+               ];
       if (lang === "en") {
         btn.forEach((elem, i) => {
           elem.textContent = langEn[i];
@@ -179,20 +89,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  //модальное окно
-  {
-    /*  <div class="youTuberModal">
-    <div id="youtuberClose">&#215;</div>
-    <div id="youtuberContainer"></div>
-  </div> */
 
-    document.body.insertAdjacentHTML(
-      "beforeend",
-      `<div class="youTuberModal">
-      <div id="youtuberClose">&#215;</div>
-      <div id="youtuberContainer"></div>
-      </div> `
-    );
+
+  const youtuber = () => {
     const youtuberItems = document.querySelectorAll("[data-youtuber]");
     const youTuberModal = document.querySelector(".youTuberModal");
     const youtuberContainer = document.querySelector("#youtuberContainer");
@@ -246,11 +145,120 @@ document.addEventListener("DOMContentLoaded", () => {
 
    
 
+  };
+
+    //модальное окно
+  {
+      document.body.insertAdjacentHTML(
+        "beforeend",
+        `<div class="youTuberModal">
+        <div id="youtuberClose">&#215;</div>
+        <div id="youtuberContainer"></div>
+        </div> `
+      );
+    youtuber();
   }
 
-  //youtube
+  //API
   {
     const API_KEY = "AIzaSyD6diIi_ZyVLwvgSj8SpScN4UQGYKJvons";
-    const API_AUTH = "338972520459-rkpje76cvha9gkoorujbctqar7peofdg.apps.googleusercontent.com";
+    const CLIENT_ID = "338972520459-rkpje76cvha9gkoorujbctqar7peofdg.apps.googleusercontent.com";
+    //авторизация
+    {
+      const buttonAuth = document.querySelector("#authorize");
+      const authBlock = document.querySelector(".auth");
+
+      gapi.load("client:auth2", () => gapi.auth2.init({client_id: CLIENT_ID}));
+
+      const authenticate = () => gapi.auth2.getAuthInstance()
+            .signIn({scope: "https://www.googleapis.com/auth/youtube.readonly"})
+            .then(() => console.log("Sign-in successful"))
+            .catch(errorAuth);
+
+      const loadClient = () => {
+        gapi.client.setApiKey(API_KEY);
+        return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest")
+            .then(() => console.log("GAPI client loaded for API"))
+            .then(() => authBlock.style.display = "none")
+            .catch(errorAuth);
+      };
+      
+      const errorAuth = err => {
+        console.error(err);
+        authBlock.style.display = "";
+      };
+
+      buttonAuth.addEventListener("click", () =>{
+        authenticate().then(loadClient);
+      });
+
+
+    }
+
+    //request
+    {
+      const gloTube = document.querySelector(".logo-academy");
+      const trends = document.querySelector("#yt_trend");
+      const like = document.querySelector("#yt_like");
+
+      const request = options => gapi.client.youtube[options.method]
+        .list(options)
+        .then(response => response.result.items)
+        .then(render)
+        .then(youtuber)
+        .catch(err => console.error("Во время запроса произошла ошибка: " + err));
+
+      const render = data =>{
+        console.log(data);
+        const ytWrapper = document.querySelector("#yt-wrapper");
+        ytWrapper.textContent = '';
+        data.forEach(item =>{
+          try {
+            const {id, id:{videoId}, snippet:{channelTitle, title, resourceId:{videoId: likedVideoId} = {}, thumbnails:{high:{url}}}} = item;
+            ytWrapper.innerHTML += `
+            <div class="yt" data-youtuber="${likedVideoId || videoId || id}">
+              <div class="yt-thumbnail" style="--aspect-ratio:16/9;">
+                <img src="${url}" alt="thumbnail" class="yt-thumbnail__img">
+              </div>
+              <div class="yt-title">${title}</div>
+              <div class="yt-channel">${channelTitle}</div>
+          </div>
+            `;
+        } catch(err){
+          console.error(err);
+        }
+        });
+      };
+
+      gloTube.addEventListener("click", () => {
+        request({
+          method: "search",
+          part: "snippet",
+          channelId: "UCVswRUcKC-M35RzgPRv8qUg",
+          order: "date",
+          maxResults: 6,
+        });
+      });
+
+      trends.addEventListener("click", () => {
+        request({
+          method: "videos",
+          part: "snippet",
+          chart: "mostPopular",
+          regionCode: "RU",
+          maxResults: 6,
+        });
+      });
+
+      like.addEventListener("click", () => {
+        request({
+          method: "playlistItems",
+          part: "snippet",
+          playlistId: "LL1q3pPcPvG2t9k0HHjkGI_g",
+          maxResults: 6,
+        });
+      });
+
+    }
   }
 });
